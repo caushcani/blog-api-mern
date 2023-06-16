@@ -27,4 +27,4 @@ const post = new Schema({
   },
 });
 
-module.exports = model("Post", post);
+export default model("Post", post);
