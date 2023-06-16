@@ -25,11 +25,23 @@ class PostController {
   }
 
   static async getAll(req: Request, res: Response, next: NextFunction) {
+    const { pageSize, currentPage } = req.body;
+
     try {
-      const allPosts = await Post.find();
-      if (allPosts) {
-        return res.send(allPosts).status(200);
-      }
+      let total = await Post.count();
+      Post.find({})
+        .skip(currentPage * pageSize)
+        .limit(pageSize)
+        .then((data) => {
+          return res
+            .send({
+              currentPage: currentPage,
+              pageSize: pageSize,
+              total: total,
+              data: data,
+            })
+            .status(200);
+        });
     } catch (error) {
       return res.send("Failed").status(500);
     }
