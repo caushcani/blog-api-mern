@@ -3,15 +3,14 @@ import Post from "../models/post";
 
 class PostController {
   static async createPost(req: Request, res: Response, next: NextFunction) {
-    const { title, body, image, authorId, likes, comments } = req.body;
-
+    const { title, body, authorId, likes } = req.body;
+    const image = req.file;
     try {
       const newPost = new Post({
         title,
         body,
         image,
         likes,
-        comments,
         authorId,
       });
 
@@ -20,7 +19,7 @@ class PostController {
         return res.send("Created").status(200);
       }
     } catch (error) {
-      return res.send("Failed").status(500);
+      return res.send(error).status(500);
     }
   }
 
@@ -66,8 +65,6 @@ class PostController {
   static async editPost(req: Request, res: Response, next: NextFunction) {
     const { title, body, image, authorId, likes, comments } = req.body;
     const { id } = req.params;
-
-    console.log(id);
 
     try {
       const originalPost = await Post.findByIdAndUpdate(id, {

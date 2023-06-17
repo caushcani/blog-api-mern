@@ -33,7 +33,7 @@ const checkUsername = async (username: string) => {
 };
 
 export const isAuthenticated = async (
-  req: Request,
+  req: Request | any,
   res: Response<ErrorResponse>,
   next: NextFunction
 ) => {
@@ -46,6 +46,7 @@ export const isAuthenticated = async (
     try {
       const decodedToken: any = jwt.verify(token, process.env.JWT_PRIVATE_KEY!);
       if (await checkUsername(decodedToken?.username)) {
+        req.id = decodedToken.id;
         next();
       }
     } catch (error) {

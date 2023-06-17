@@ -5,6 +5,7 @@ import cors from "cors";
 import * as middlewares from "./middlewares";
 import userRoutes from "./routes/user-routes";
 import postRoutes from "./routes/post-routes";
+import commentRoutes from "./routes/comment-routes";
 
 require("dotenv").config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 
 app.use("/api/auth", userRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/comment", commentRoutes);
 
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);

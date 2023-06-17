@@ -1,11 +1,28 @@
 import { Router } from "express";
 import PostController from "../controller/PostController";
 import { isAuthenticated } from "../middlewares";
+import multer from "multer";
 
 const router = Router();
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "./my-uploads");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
+
 //create post
-router.post("/create", isAuthenticated, PostController.createPost);
+router.post(
+  "/create",
+  isAuthenticated,
+  upload.single("image"),
+  PostController.createPost
+);
 
 //read all
 router.get("/get-all", isAuthenticated, PostController.getAll);

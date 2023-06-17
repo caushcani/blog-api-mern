@@ -28,9 +28,13 @@ class UserController {
     try {
       User.findOne({ username: username }).then((userRes: any) => {
         bcrypt.compare(password, userRes?.password).then((passRes) => {
-          const token = jwt.sign({ username }, process.env.JWT_PRIVATE_KEY!, {
-            expiresIn: "100d",
-          });
+          const token = jwt.sign(
+            { username, id: userRes._id },
+            process.env.JWT_PRIVATE_KEY!,
+            {
+              expiresIn: "100d",
+            }
+          );
           if (passRes) {
             return res
               .send({
