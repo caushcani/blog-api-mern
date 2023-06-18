@@ -10,15 +10,18 @@ class CommentController {
     const { postId, body } = req.body;
 
     try {
-      const foundPost = Post.findByIdAndUpdate(postId, {
-        $push: {
-          comments: {
-            body: body,
-            by: req.id,
+      const foundPost = await Post.findByIdAndUpdate(
+        { _id: postId },
+        {
+          $push: {
+            comments: {
+              body: body,
+              by: req.id,
+            },
           },
-        },
-      });
-      if (await foundPost) {
+        }
+      );
+      if (foundPost) {
         return res.send("new comment added").status(200);
       }
     } catch (error) {
@@ -51,6 +54,31 @@ class CommentController {
       );
       if (updated) {
         return res.send("edited").status(200);
+      }
+    } catch (error) {
+      return res.send(error).status(500);
+    }
+  }
+
+  static async deleteComment(req: Request, res: Response, next: NextFunction) {
+    const { postId, commentId } = req.params;
+
+    try {
+      const postDeleted = await Post.updateOne(
+        {
+          _id: postId,
+          "comments._id": commentId,
+        },
+        {
+          $pull: {
+            comments: {
+              _id: commentId,
+            },
+          },
+        }
+      );
+      if (postDeleted) {
+        return res.send("deleted").status(200);
       }
     } catch (error) {
       return res.send(error).status(500);
