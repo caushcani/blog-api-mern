@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcrypt";
 import User from "../models/user";
 import jwt from "jsonwebtoken";
-import Post from "../models/post";
 
 class UserController {
   static async signup(req: Request, res: Response, next: NextFunction) {
@@ -85,6 +84,47 @@ class UserController {
       }
     } catch (error) {
       return res.send(error).status(500);
+    }
+  }
+
+  static async removeFriend(
+    req: Request | any,
+    res: Response,
+    next: NextFunction
+  ) {
+    const { friendId } = req.body;
+
+    try {
+      const found = await User.updateOne(
+        {
+          _id: req.id,
+          "following.friendId": friendId,
+        },
+        {
+          $pull: {
+            following: {
+              friendId: friendId,
+            },
+          },
+        }
+      );
+      if (found) {
+        await User.updateOne(
+          {
+            _id: friendId,
+          },
+          {
+            $pull: {
+              followers: {
+                friendId: req.id,
+              },
+            },
+          }
+        );
+        return res.send("removed").status(200);
+      }
+    } catch (error) {
+      return res.send("failed").status(500);
     }
   }
 }

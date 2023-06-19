@@ -15,4 +15,7 @@ router.post("/signup", UserController.signup);
 //follow someone
 router.post("/follow", isAuthenticated, UserController.followUser);
 
+//unfollow
+router.post("/unfollow", isAuthenticated, UserController.removeFriend);
+
 export default router;
