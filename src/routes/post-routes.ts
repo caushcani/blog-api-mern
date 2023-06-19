@@ -36,4 +36,7 @@ router.put("/edit/:id", isAuthenticated, PostController.editPost);
 //delete post
 router.delete("/delete/:id", isAuthenticated, PostController.deletePost);
 
+//user posts
+router.get("/my-posts", isAuthenticated, PostController.getMyPosts);
+
 export default router;

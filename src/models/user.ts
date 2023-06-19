@@ -13,6 +13,20 @@ const user = new Schema({
     type: String,
   },
   likedPosts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
+  followers: {
+    type: [
+      {
+        friendId: Schema.Types.ObjectId,
+      },
+    ],
+  },
+  following: {
+    type: [
+      {
+        friendId: Schema.Types.ObjectId,
+      },
+    ],
+  },
 });
 
 export default model("User", user);

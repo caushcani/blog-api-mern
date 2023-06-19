@@ -2,8 +2,12 @@ import { NextFunction, Request, Response } from "express";
 import Post from "../models/post";
 
 class PostController {
-  static async createPost(req: Request, res: Response, next: NextFunction) {
-    const { title, body, authorId, likes } = req.body;
+  static async createPost(
+    req: Request | any,
+    res: Response,
+    next: NextFunction
+  ) {
+    const { title, body, likes } = req.body;
     const image = req.file;
     try {
       const newPost = new Post({
@@ -11,7 +15,8 @@ class PostController {
         body,
         image,
         likes,
-        authorId,
+        authorId: req.id,
+        dateCreated: new Date(),
       });
 
       const createPostResponse = await newPost.save();
@@ -91,6 +96,29 @@ class PostController {
       }
     } catch (error) {
       return res.send("Failed").status(500);
+    }
+  }
+
+  static async getMyPosts(
+    req: Request | any,
+    res: Response,
+    next: NextFunction
+  ) {
+    const userId = req.id;
+
+    try {
+      const allPosts = await Post.find({
+        authorId: userId,
+      });
+      if (allPosts) {
+        return res
+          .send({
+            posts: allPosts,
+          })
+          .status(200);
+      }
+    } catch (error) {
+      return res.send("failed").status(500);
     }
   }
 }

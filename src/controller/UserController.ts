@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcrypt";
 import User from "../models/user";
 import jwt from "jsonwebtoken";
+import Post from "../models/post";
 
 class UserController {
   static async signup(req: Request, res: Response, next: NextFunction) {
@@ -47,6 +48,43 @@ class UserController {
       });
     } catch (error) {
       return res.send("Failed").status(500);
+    }
+  }
+
+  static async followUser(
+    req: Request | any,
+    res: Response,
+    next: NextFunction
+  ) {
+    const { friendId } = req.body;
+
+    try {
+      const added = await User.findByIdAndUpdate(
+        { _id: req.id },
+        {
+          $push: {
+            following: {
+              friendId,
+            },
+          },
+        }
+      );
+      if (added) {
+        //change followers for friendId
+        await User.findByIdAndUpdate(
+          { _id: friendId },
+          {
+            $push: {
+              followers: {
+                friendId: req.id,
+              },
+            },
+          }
+        );
+        return res.send("added").status(200);
+      }
+    } catch (error) {
+      return res.send(error).status(500);
     }
   }
 }

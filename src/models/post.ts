@@ -11,6 +11,9 @@ const post = new Schema({
   body: {
     type: String,
   },
+  dateCreated: {
+    type: Date,
+  },
   image: {
     type: Object,
   },
