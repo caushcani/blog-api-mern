@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import Post from "../models/post";
+import { productSchema } from "../utils/validation_schema";
 
 class PostController {
   static async createPost(
@@ -10,6 +11,7 @@ class PostController {
     const { title, body, likes } = req.body;
     const image = req.file;
     try {
+      await productSchema.validateAsync(req.body);
       const newPost = new Post({
         title,
         body,
@@ -21,10 +23,13 @@ class PostController {
 
       const createPostResponse = await newPost.save();
       if (createPostResponse) {
-        return res.send("Created").status(200);
+        return res.status(200).send("Created");
       }
-    } catch (error) {
-      return res.send(error).status(500);
+    } catch (error: any) {
+      if (error.isJoi === true) {
+        return res.status(400).send(error.message);
+      }
+      return res.status(500).send(error);
     }
   }
 
@@ -72,6 +77,8 @@ class PostController {
     const { id } = req.params;
 
     try {
+      await productSchema.validateAsync(req.body);
+
       const originalPost = await Post.findByIdAndUpdate(id, {
         title,
         body,
@@ -83,8 +90,11 @@ class PostController {
       if (originalPost) {
         return res.send("updated").status(200);
       }
-    } catch (error) {
-      return res.send("failed").status(500);
+    } catch (error: any) {
+      if (error.isJoi === true) {
+        return res.status(400).send(error.message);
+      }
+      return res.status(500).send(error);
     }
   }
   static async deletePost(req: Request, res: Response, next: NextFunction) {
