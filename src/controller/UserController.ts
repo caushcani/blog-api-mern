@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcrypt";
 import User from "../models/user";
 import jwt from "jsonwebtoken";
-import { loginSchema, signupSchema } from "../utils/validation_schema";
+import { GlobalError } from "../utils/global-error";
 
 class UserController {
   static async signup(req: Request, res: Response, next: NextFunction) {
@@ -16,16 +16,12 @@ class UserController {
     });
 
     try {
-      await signupSchema.validateAsync(req.body);
       const res1 = await user.save();
       if (res1) {
         return res.send("Created").status(200);
       }
     } catch (error: any) {
-      if (error.isJoi === true) {
-        return res.status(400).send(error.message);
-      }
-      return res.status(500).send(error);
+      return next(new GlobalError(error as any));
     }
   }
 
@@ -33,15 +29,16 @@ class UserController {
     const { username, password } = req.body;
 
     try {
-      await loginSchema.validateAsync(req.body);
-
       User.findOne({ username: username }).then((userRes: any) => {
+        if (userRes === null) {
+          return next(new GlobalError("Invalid username or password", 400));
+        }
         bcrypt.compare(password, userRes?.password).then((passRes) => {
           const token = jwt.sign(
             { username, id: userRes._id },
             process.env.JWT_PRIVATE_KEY!,
             {
-              expiresIn: "100d",
+              expiresIn: process.env.JWT_EXPIRE!,
             }
           );
           if (passRes) {
@@ -55,10 +52,7 @@ class UserController {
         });
       });
     } catch (error: any) {
-      if (error.isJoi === true) {
-        return res.status(400).send(error.message);
-      }
-      return res.status(500).send(error);
+      return next(new GlobalError(error as any));
     }
   }
 

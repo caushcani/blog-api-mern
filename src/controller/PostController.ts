@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import Post from "../models/post";
-import { productSchema } from "../utils/validation_schema";
+import { productSchema } from "../validator-schema/validation_schema";
 
 class PostController {
   static async createPost(
@@ -39,6 +39,7 @@ class PostController {
     try {
       let total = await Post.count();
       Post.find({})
+        .populate("authorId", "username")
         .skip(currentPage * pageSize)
         .limit(pageSize)
         .then((data) => {

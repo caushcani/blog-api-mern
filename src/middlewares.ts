@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import ErrorResponse from "./interfaces/ErrorResponse";
 import jwt from "jsonwebtoken";
 import User from "./models/user";
+import { GlobalError } from "./utils/global-error";
 
 export function notFound(req: Request, res: Response, next: NextFunction) {
   res.status(404);
@@ -11,12 +12,12 @@ export function notFound(req: Request, res: Response, next: NextFunction) {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorHandler(
-  err: Error,
+  err: GlobalError,
   req: Request,
   res: Response<ErrorResponse>,
   next: NextFunction
 ) {
-  const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
+  const statusCode = err.statusCode !== 200 ? err.statusCode : 500;
   res.status(statusCode);
   res.json({
     message: err.message,
