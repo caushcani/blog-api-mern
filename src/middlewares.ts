@@ -48,6 +48,7 @@ export const isAuthenticated = async (
       const decodedToken: any = jwt.verify(token, process.env.JWT_PRIVATE_KEY!);
       if (await checkUsername(decodedToken?.username)) {
         req.id = decodedToken.id;
+        req.username = decodedToken.username;
         next();
       }
     } catch (error) {

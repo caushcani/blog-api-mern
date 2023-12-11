@@ -1,5 +1,5 @@
 import { Router } from "express";
-import PostController from "../controller/PostController";
+import PostController from "../controllers/PostController";
 import { isAuthenticated } from "../middlewares";
 import multer from "multer";
 

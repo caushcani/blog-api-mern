@@ -1,5 +1,5 @@
 import { Router } from "express";
-import UserController from "../controller/UserController";
+import UserController from "../controllers/UserController";
 import { isAuthenticated } from "../middlewares";
 import validateRequest from "../middleware/validate-request";
 import {
@@ -20,5 +20,8 @@ router.post("/follow", isAuthenticated, UserController.followUser);
 
 //unfollow
 router.post("/unfollow", isAuthenticated, UserController.removeFriend);
+
+//get friends
+router.get("/friends", isAuthenticated, UserController.getFollowingList);
 
 export default router;
