@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import Post from "../models/post";
-import { productSchema } from "../validator-schema/validation_schema";
+import { GlobalError } from "../utils/global-error";
 
 class PostController {
   static async createPost(
@@ -11,7 +11,6 @@ class PostController {
     const { title, body, likes } = req.body;
     const image = req.file;
     try {
-      await productSchema.validateAsync(req.body);
       const newPost = new Post({
         title,
         body,
@@ -23,13 +22,14 @@ class PostController {
 
       const createPostResponse = await newPost.save();
       if (createPostResponse) {
-        return res.status(200).send("Created");
+        return res.status(200).send({
+          message: "Post created.",
+        });
       }
-    } catch (error: any) {
-      if (error.isJoi === true) {
-        return res.status(400).send(error.message);
+    } catch (error: unknown) {
+      if (error instanceof GlobalError) {
+        return next(new GlobalError(error.message));
       }
-      return res.status(500).send(error);
     }
   }
 
@@ -43,17 +43,17 @@ class PostController {
         .skip(currentPage * pageSize)
         .limit(pageSize)
         .then((data) => {
-          return res
-            .send({
-              currentPage: currentPage,
-              pageSize: pageSize,
-              total: total,
-              data: data,
-            })
-            .status(200);
+          return res.status(200).send({
+            currentPage: currentPage,
+            pageSize: pageSize,
+            total: total,
+            data: data,
+          });
         });
-    } catch (error) {
-      return res.send("Failed").status(500);
+    } catch (error: unknown) {
+      if (error instanceof GlobalError) {
+        return next(new GlobalError(error.message));
+      }
     }
   }
 
@@ -62,14 +62,11 @@ class PostController {
 
     try {
       const uniquePost = await Post.findById({ _id: id });
-
-      if (uniquePost) {
-        return res.send(uniquePost).status(200);
-      } else {
-        return res.send([]).status(200);
+      return res.status(200).send(uniquePost);
+    } catch (error: unknown) {
+      if (error instanceof GlobalError) {
+        return next(new GlobalError(error.message));
       }
-    } catch (error) {
-      return res.send("Failed").status(500);
     }
   }
 
@@ -78,8 +75,6 @@ class PostController {
     const { id } = req.params;
 
     try {
-      await productSchema.validateAsync(req.body);
-
       const originalPost = await Post.findByIdAndUpdate(id, {
         title,
         body,
@@ -89,24 +84,50 @@ class PostController {
         comments,
       });
       if (originalPost) {
-        return res.send("updated").status(200);
+        return res.status(200).send({
+          message: "Post edited",
+        });
       }
-    } catch (error: any) {
-      if (error.isJoi === true) {
-        return res.status(400).send(error.message);
+    } catch (error: unknown) {
+      if (error instanceof GlobalError) {
+        return next(new GlobalError(error.message));
       }
-      return res.status(500).send(error);
     }
   }
-  static async deletePost(req: Request, res: Response, next: NextFunction) {
+  static async deletePost(
+    req: Request | any,
+    res: Response,
+    next: NextFunction
+  ) {
     const { id } = req.params;
+    const authorId = req.id;
+
     try {
-      const deletedPost = await Post.deleteOne({ _id: id });
-      if (deletedPost) {
-        return res.send("Deleted").status(200);
+      //check if post exists and user doing the request is the author.
+      const foundPost = await Post.find({
+        _id: id,
+        authorId: authorId,
+      });
+
+      // if post exits, delete it
+      if (foundPost.length > 0) {
+        const deletedPost = await Post.findOneAndDelete({
+          _id: id,
+        });
+        if (deletedPost !== null) {
+          return res.status(200).send({
+            message: "Post deleted.",
+          });
+        }
+      } else {
+        return res.status(400).send({
+          message: "Post not found.",
+        });
       }
-    } catch (error) {
-      return res.send("Failed").status(500);
+    } catch (error: unknown) {
+      if (error instanceof GlobalError) {
+        return next(new GlobalError(error.message));
+      }
     }
   }
 
@@ -122,14 +143,14 @@ class PostController {
         authorId: userId,
       });
       if (allPosts) {
-        return res
-          .send({
-            posts: allPosts,
-          })
-          .status(200);
+        return res.status(200).send({
+          posts: allPosts,
+        });
       }
     } catch (error) {
-      return res.send("failed").status(500);
+      if (error instanceof GlobalError) {
+        return next(new GlobalError(error.message));
+      }
     }
   }
 }

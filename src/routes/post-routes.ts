@@ -2,6 +2,8 @@ import { Router } from "express";
 import PostController from "../controllers/PostController";
 import { isAuthenticated } from "../middlewares";
 import multer from "multer";
+import validateRequest from "../middleware/validate-request";
+import { postSchema } from "../validator-schema/validation_schema";
 
 const router = Router();
 
@@ -20,6 +22,7 @@ const upload = multer({ storage: storage });
 router.post(
   "/create",
   isAuthenticated,
+  validateRequest(postSchema),
   upload.single("image"),
   PostController.createPost
 );

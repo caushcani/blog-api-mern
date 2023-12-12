@@ -14,7 +14,7 @@ export const signupSchema = Joi.object({
   }),
 });
 
-export const productSchema = Joi.object({
+export const postSchema = Joi.object({
   title: Joi.string().max(40).required(),
   body: Joi.string().max(100).required(),
   image: Joi.any(),
