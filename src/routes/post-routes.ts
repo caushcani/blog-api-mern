@@ -7,6 +7,7 @@ import { postSchema } from "../validator-schema/validation_schema";
 
 const router = Router();
 
+//TODO: Configure AWS S3 for images
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "./my-uploads");

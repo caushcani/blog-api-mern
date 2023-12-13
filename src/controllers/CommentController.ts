@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import Post from "../models/post";
+import { GlobalError } from "../utils/global-error";
+import mongoose from "mongoose";
 
 class CommentController {
   static async addComment(
@@ -22,10 +24,14 @@ class CommentController {
         }
       );
       if (foundPost) {
-        return res.send("new comment added").status(200);
+        return res.status(200).send({
+          message: "Comment added successfully.",
+        });
       }
-    } catch (error) {
-      return res.send(error).status(500);
+    } catch (error: unknown) {
+      if (error instanceof GlobalError) {
+        return next(new GlobalError(error.message));
+      }
     }
   }
 
@@ -53,10 +59,14 @@ class CommentController {
         }
       );
       if (updated) {
-        return res.send("edited").status(200);
+        return res.status(200).send({
+          message: "Comment updated.",
+        });
       }
-    } catch (error) {
-      return res.send(error).status(500);
+    } catch (error: unknown) {
+      if (error instanceof GlobalError) {
+        return next(new GlobalError(error.message));
+      }
     }
   }
 
@@ -78,10 +88,61 @@ class CommentController {
         }
       );
       if (postDeleted) {
-        return res.send("deleted").status(200);
+        return res.status(200).send({
+          message: "Comment deleted.",
+        });
       }
-    } catch (error) {
-      return res.send(error).status(500);
+    } catch (error: unknown) {
+      if (error instanceof GlobalError) {
+        return next(new GlobalError(error.message));
+      }
+    }
+  }
+
+  static async getCommentsForPost(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    const { postId } = req.params;
+
+    try {
+      const allComments = await Post.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(postId),
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "comments.by",
+            foreignField: "_id",
+            as: "commentAuthor",
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            commentMessage: "$comments.body",
+            commentedBy: "$commentAuthor.username",
+          },
+        },
+        //$wind => separate each item in array in a different collection.
+        {
+          $unwind: "$commentMessage",
+        },
+      ]);
+
+      if (allComments) {
+        return res.status(200).send({
+          message: allComments,
+        });
+      }
+    } catch (error: unknown) {
+      if (error instanceof GlobalError) {
+        return next(new GlobalError(error.message));
+      }
     }
   }
 }

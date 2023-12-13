@@ -11,5 +11,9 @@ router.delete(
   isAuthenticated,
   CommentController.deleteComment
 );
-
+router.get(
+  "/get-comments/:postId",
+  isAuthenticated,
+  CommentController.getCommentsForPost
+);
 export default router;
